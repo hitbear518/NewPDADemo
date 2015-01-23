@@ -22,7 +22,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/sid_edit"
         android:hint="User Name"
-        android:inputType="text" />
+        android:inputType="text"
+        android:text="admin" />
 
     <EditText
         android:id="@+id/password_edit"
@@ -30,13 +31,13 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/user_name_edit"
         android:hint="Password"
-        android:inputType="textPassword" />
+        android:inputType="textPassword"
+        android:text="1" />
 
     <TextView
         android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/password_edit"
-        android:text="@string/hello_world" />
+        android:layout_below="@id/password_edit" />
 
 </RelativeLayout>

@@ -4,8 +4,13 @@
     tools:context=".MainActivity">
 
     <item
-        android:id="@+id/action_req_ip"
-        android:title="Req Ip"
+        android:id="@+id/action_next"
+        android:title="Next"
+        android:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_reset"
+        android:title="Reset"
         android:showAsAction="ifRoom" />
 
 </menu>

@@ -2,8 +2,6 @@ package me.senwang.newpdademo;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.support.v4.view.WindowCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
@@ -12,15 +10,17 @@ import android.widget.TextView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Map;
 
 
 public class MainActivity extends Activity {
 
-	public static final String REQUEST_IP_URL = "http://erp.wangdian.cn/mobile/map.php";
 
 	private EditText mSidEdit;
 	private EditText mUserNameEdit;
@@ -28,6 +28,8 @@ public class MainActivity extends Activity {
 	private TextView mTextView;
 
 	private String mHost;
+	private byte[] mLicense;
+	private String mSession;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,45 +41,6 @@ public class MainActivity extends Activity {
 		mUserNameEdit = (EditText) findViewById(R.id.user_name_edit);
 		mPasswordEdit = (EditText) findViewById(R.id.password_edit);
 		mTextView = (TextView) findViewById(R.id.text);
-	}
-
-	private void fetchIp() {
-		JSONObject jsonRequest = new JSONObject();
-		try {
-			String sid = mSidEdit.getText().toString();
-			jsonRequest.put("sid", sid);
-			jsonRequest.put("ua", "mobile");
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		JsonObjectRequest request = new JsonObjectRequest(REQUEST_IP_URL, jsonRequest, new Response.Listener<JSONObject>() {
-			@Override
-			public void onResponse(JSONObject response) {
-				try {
-					int code = response.getInt("code");
-					if (code == 0) {
-						mHost = response.getString("host");
-						mTextView.append("\nHost: " + mHost);
-					} else {
-						mTextView.append("\n" + response.toString());
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					mTextView.append("\n" + e.getMessage());
-				}
-//				setSupportProgressBarIndeterminateVisibility(false);
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
-				mTextView.setText(error.getMessage());
-//				setSupportProgressBarIndeterminateVisibility(false);
-			}
-		});
-
-		MySingleton.getInstance(this).addToRequest(request);
-		setProgressBarIndeterminateVisibility(true);
 	}
 
 	@Override
@@ -96,11 +59,101 @@ public class MainActivity extends Activity {
 
 		//noinspection SimplifiableIfStatement
 		switch (id) {
-		case R.id.action_req_ip:
-			fetchIp();
+		case R.id.action_next:
+			if (mHost == null) {
+				request(WdtRequestCopy.RequestUrl.REQUEST_IP, WdtRequestCopy.Param.getRequestIpParams(mSidEdit.getText().toString()), mGetIpListener);
+			} else if (mLicense == null) {
+				request(WdtRequestCopy.RequestUrl.getRequestUserIdUrl(mHost), null, mGetLicenseListener);
+			} else if (mSession == null){
+				String password = mPasswordEdit.getText().toString();
+				byte[] pwdMd5Bytes = WdtRequestCopy.Param.md5Bytes(password);
+				String pwdMd5Str = new String(Hex.encodeHex(pwdMd5Bytes));
+				request(WdtRequestCopy.RequestUrl.getLoginUrl(mHost),
+						WdtRequestCopy.Param.getLoginParams(mSidEdit.getText().toString(),mUserNameEdit.getText().toString(), mLicense, pwdMd5Str),
+						mLoginListener);
+			}
+			return true;
+		case R.id.action_reset:
+			mHost = null;
+			mLicense = null;
+			mSession = null;
+			mTextView.setText("");
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
 	}
+
+	private void request(String url, Map<String, String> params, Response.Listener<JSONObject> listener) {
+		WdtRequestCopy req = new WdtRequestCopy(url, params, listener, mErrorListener);
+		MySingleton.getInstance(this).addToRequest(req);
+		setProgressBarIndeterminateVisibility(true);
+	}
+
+	private final Response.Listener<JSONObject> mGetIpListener = new Response.Listener<JSONObject>() {
+		@Override
+		public void onResponse(JSONObject response) {
+			try {
+				int code = response.getInt(WdtRequestCopy.Result.CODE);
+				if (code == 0) {
+					mHost = response.getString("ip");
+					mTextView.append("\nHost: " + mHost);
+				} else {
+					mTextView.append("\nMessage: " + response.getString(WdtRequestCopy.Result.MESSAGE));
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+				mTextView.append("\nException Message: " + e.getMessage());
+			}
+			setProgressBarIndeterminateVisibility(false);
+		}
+	};
+
+	private final Response.Listener<JSONObject> mGetLicenseListener = new Response.Listener<JSONObject>() {
+		@Override
+		public void onResponse(JSONObject response) {
+			try {
+				int code = response.getInt(WdtRequestCopy.Result.CODE);
+				if (code == 0) {
+					String licenseHex = response.getString(WdtRequestCopy.Result.PK);
+					mLicense = Hex.decodeHex(licenseHex.toCharArray());
+
+					mTextView.append("\nLicense: " + licenseHex);
+				} else {
+					mTextView.append("\nMessage: " + response.getString(WdtRequestCopy.Result.MESSAGE));
+				}
+			} catch (JSONException | DecoderException e) {
+				e.printStackTrace();
+				mTextView.append("\n Exception Message: " + e.getMessage());
+			}
+			setProgressBarIndeterminateVisibility(false);
+		}
+	};
+
+	private final Response.Listener<JSONObject> mLoginListener = new Response.Listener<JSONObject>() {
+		@Override
+		public void onResponse(JSONObject response) {
+			try {
+				int code = response.getInt(WdtRequestCopy.Result.CODE);
+				if (code == 0) {
+					mSession = response.getString(WdtRequestCopy.Result.SESSION);
+					mTextView.append("\nSession: " + mSession);
+				} else {
+					mTextView.append("\nMessage: " + response.getString(WdtRequestCopy.Result.MESSAGE));
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+				mTextView.append("\n Exception Message: " + e.getMessage());
+			}
+			setProgressBarIndeterminateVisibility(false);
+		};
+	};
+
+	private final Response.ErrorListener mErrorListener = new Response.ErrorListener() {
+		@Override
+		public void onErrorResponse(VolleyError error) {
+			mTextView.append("\nError Message: " + error.getMessage());
+			setProgressBarIndeterminateVisibility(false);
+		}
+	};
 }
