@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
 			if (mHost == null) {
 				request(WdtRequestCopy.RequestUrl.REQUEST_IP, WdtRequestCopy.Param.getRequestIpParams(mSidEdit.getText().toString()), mGetIpListener);
 			} else if (mLicense == null) {
-				request(WdtRequestCopy.RequestUrl.getRequestUserIdUrl(mHost), null, mGetLicenseListener);
+				request(WdtRequestCopy.RequestUrl.getLicenseUrl(mHost), null, mGetLicenseListener);
 			} else if (mSession == null){
 				String password = mPasswordEdit.getText().toString();
 				byte[] pwdMd5Bytes = WdtRequestCopy.Param.md5Bytes(password);
@@ -71,6 +71,8 @@ public class MainActivity extends Activity {
 				request(WdtRequestCopy.RequestUrl.getLoginUrl(mHost),
 						WdtRequestCopy.Param.getLoginParams(mSidEdit.getText().toString(),mUserNameEdit.getText().toString(), mLicense, pwdMd5Str),
 						mLoginListener);
+			} else {
+				request(WdtRequestCopy.RequestUrl.getWarehousesUrl(mHost), WdtRequestCopy.Param.getWarehousesParams(), mWarehousesListener);
 			}
 			return true;
 		case R.id.action_reset:
@@ -96,7 +98,7 @@ public class MainActivity extends Activity {
 			try {
 				int code = response.getInt(WdtRequestCopy.Result.CODE);
 				if (code == 0) {
-					mHost = response.getString("ip");
+					mHost = response.getString(WdtRequestCopy.Result.IP);
 					mTextView.append("\nHost: " + mHost);
 				} else {
 					mTextView.append("\nMessage: " + response.getString(WdtRequestCopy.Result.MESSAGE));
@@ -147,6 +149,24 @@ public class MainActivity extends Activity {
 			}
 			setProgressBarIndeterminateVisibility(false);
 		};
+	};
+
+	private final Response.Listener<JSONObject> mWarehousesListener = new Response.Listener<JSONObject>() {
+		@Override
+		public void onResponse(JSONObject response) {
+			try {
+				int code = response.getInt(WdtRequestCopy.Result.CODE);
+				if (code == 0) {
+					mTextView.setText(response.toString());
+				} else {
+					mTextView.append("\nMessage: " + response.getString(WdtRequestCopy.Result.MESSAGE));
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+				mTextView.append("\nException Message: " + e.getMessage());
+			}
+			setProgressBarIndeterminateVisibility(false);
+		}
 	};
 
 	private final Response.ErrorListener mErrorListener = new Response.ErrorListener() {

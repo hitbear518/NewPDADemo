@@ -1,5 +1,7 @@
 package me.senwang.newpdademo;
 
+import android.text.TextUtils;
+
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
@@ -28,12 +30,16 @@ public class WdtRequestCopy extends Request<JSONObject> {
 	public static class RequestUrl {
 		public static final String REQUEST_IP = "http://erp.wangdian.cn/mobile/map.php";
 
-		public static String getRequestUserIdUrl(String host) {
+		public static String getLicenseUrl(String host) {
 			return "http://" + host + "/mobile/prepare.php";
 		}
 
 		public static String getLoginUrl(String host) {
 			return "http://" + host + "/mobile/login.php";
+		}
+
+		public static String getWarehousesUrl(String host) {
+			return "http://" + host + "/mobile/warehouse.php";
 		}
 	}
 
@@ -43,6 +49,7 @@ public class WdtRequestCopy extends Request<JSONObject> {
 		public static final String NICK = "nick";
 		public static final String TIMESTAMP = "timestamp";
 		public static final String SIGN = "sign";
+		public static final String MINE = "mine";
 
 		public static Map<String, String> getRequestIpParams(String sid) {
 			Map<String, String> params = new HashMap<>();
@@ -59,6 +66,12 @@ public class WdtRequestCopy extends Request<JSONObject> {
 			params.put(TIMESTAMP, timestamp);
 			String sign = makeSign(sid, nick, pwdMd5, timestamp, license);
 			params.put(SIGN, sign);
+			return params;
+		}
+
+		public static Map<String, String> getWarehousesParams() {
+			Map<String, String> params = new HashMap<>();
+			params.put(MINE, "1");
 			return params;
 		}
 
@@ -104,7 +117,7 @@ public class WdtRequestCopy extends Request<JSONObject> {
 
 	public static class Result {
 		public static final String CODE = "code";
-		public static final String HOST = "host";
+		public static final String IP = "ip";
 		public static final String MESSAGE = "message";
 		public static final String PK = "pk";
 		public static final String SESSION = "session";
