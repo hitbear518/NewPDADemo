@@ -2,6 +2,7 @@ package me.senwang.newpdademo;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
@@ -10,13 +11,21 @@ import android.widget.TextView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.Gson;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.util.HashMap;
 import java.util.Map;
+
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
 
 
 public class MainActivity extends Activity {
@@ -27,9 +36,19 @@ public class MainActivity extends Activity {
 	private EditText mPasswordEdit;
 	private TextView mTextView;
 
-	private String mHost;
+	private String mIp;
 	private byte[] mLicense;
 	private String mSession;
+
+	private final RestAdapter mGetIpRestAdapter = new RestAdapter.Builder()
+			.setEndpoint("http://erp.wangdian.cn")
+			.build();
+
+	private RestAdapter mHostRestAdapter;
+	private HostInterface mHostInterface;
+	private TestInterface mTestInterface;
+
+	private WdtStock mTestStock;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +60,9 @@ public class MainActivity extends Activity {
 		mUserNameEdit = (EditText) findViewById(R.id.user_name_edit);
 		mPasswordEdit = (EditText) findViewById(R.id.password_edit);
 		mTextView = (TextView) findViewById(R.id.text);
+
+		CookieManager cm = new CookieManager();
+		CookieHandler.setDefault(cm);
 	}
 
 	@Override
@@ -60,23 +82,37 @@ public class MainActivity extends Activity {
 		//noinspection SimplifiableIfStatement
 		switch (id) {
 		case R.id.action_next:
-			if (mHost == null) {
-				request(WdtRequestCopy.RequestUrl.REQUEST_IP, WdtRequestCopy.Param.getRequestIpParams(mSidEdit.getText().toString()), mGetIpListener);
+			setProgressBarIndeterminateVisibility(true);
+			if (mIp == null) {
+//				request(WdtRequestCopy.RequestUrl.REQUEST_IP, WdtRequestCopy.Param.getRequestIpParams(mSidEdit.getText().toString()), mGetIpListener);
+				GetIpInterface getIpInterface = mGetIpRestAdapter.create(GetIpInterface.class);
+				getIpInterface.getIp(mSidEdit.getText().toString(), mGetIpCallback);
 			} else if (mLicense == null) {
-				request(WdtRequestCopy.RequestUrl.getLicenseUrl(mHost), null, mGetLicenseListener);
+//				request(WdtRequestCopy.RequestUrl.getLicenseUrl(mIp), null, mGetLicenseListener);
+				mHostInterface.getLicense(mGetLicenseCallback);
 			} else if (mSession == null){
 				String password = mPasswordEdit.getText().toString();
 				byte[] pwdMd5Bytes = WdtRequestCopy.Param.md5Bytes(password);
 				String pwdMd5Str = new String(Hex.encodeHex(pwdMd5Bytes));
-				request(WdtRequestCopy.RequestUrl.getLoginUrl(mHost),
-						WdtRequestCopy.Param.getLoginParams(mSidEdit.getText().toString(),mUserNameEdit.getText().toString(), mLicense, pwdMd5Str),
-						mLoginListener);
+//				request(WdtRequestCopy.RequestUrl.getLoginUrl(mIp),
+//						WdtRequestCopy.Param.getLoginParams(mSidEdit.getText().toString(),mUserNameEdit.getText().toString(), mLicense, pwdMd5Str),
+//						mLoginListener);
+				mHostInterface.login(WdtRequestCopy.Param.getLoginParams(mSidEdit.getText().toString(), mUserNameEdit.getText().toString(), mLicense, pwdMd5Str),
+						mLoginCallback);
 			} else {
-				request(WdtRequestCopy.RequestUrl.getWarehousesUrl(mHost), WdtRequestCopy.Param.getWarehousesParams(), mWarehousesListener);
+//				request(WdtRequestCopy.RequestUrl.getWarehousesUrl(mIp), WdtRequestCopy.Param.getWarehousesParams(), mWarehousesListener);
+//				mHostInterface.getWarehouses(mGetWarehousesCallback);
+				Map<String, String> testParams = new HashMap<>();
+//				testParams.put("warehouse_no", "WH1");
+//				testParams.put("spec_no", "062650-01");
+				testParams.put("page_no", "1");
+				testParams.put("page_size", "1");
+				mHostInterface.getStocks(testParams, mGetStocksCallback);
+//				mTestInterface.testStocks(testParams, mTestCallBack);
 			}
 			return true;
 		case R.id.action_reset:
-			mHost = null;
+			mIp = null;
 			mLicense = null;
 			mSession = null;
 			mTextView.setText("");
@@ -98,8 +134,8 @@ public class MainActivity extends Activity {
 			try {
 				int code = response.getInt(WdtRequestCopy.Result.CODE);
 				if (code == 0) {
-					mHost = response.getString(WdtRequestCopy.Result.IP);
-					mTextView.append("\nHost: " + mHost);
+					mIp = response.getString(WdtRequestCopy.Result.IP);
+					mTextView.append("\nIP: " + mIp);
 				} else {
 					mTextView.append("\nMessage: " + response.getString(WdtRequestCopy.Result.MESSAGE));
 				}
@@ -145,7 +181,7 @@ public class MainActivity extends Activity {
 				}
 			} catch (JSONException e) {
 				e.printStackTrace();
-				mTextView.append("\n Exception Message: " + e.getMessage());
+				mTextView.append("\nException Message: " + e.getMessage());
 			}
 			setProgressBarIndeterminateVisibility(false);
 		};
@@ -172,6 +208,103 @@ public class MainActivity extends Activity {
 	private final Response.ErrorListener mErrorListener = new Response.ErrorListener() {
 		@Override
 		public void onErrorResponse(VolleyError error) {
+			mTextView.append("\nError Message: " + error.getMessage());
+			setProgressBarIndeterminateVisibility(false);
+		}
+	};
+
+	private abstract class HttpCallback<T> implements Callback<T> {
+		@Override
+		public void success(T result, retrofit.client.Response response) {
+			if (result instanceof WdtHttpResult) {
+				WdtHttpResult httpResult = (WdtHttpResult) result;
+				if (httpResult.code == 0) {
+					onSuccess(result);
+				} else {
+					mTextView.append("\nIllegal result, message: " + httpResult.message);
+				}
+			} else {
+				mTextView.append("\nIncorrect type, type: " + result.getClass().getSimpleName());
+			}
+			setProgressBarIndeterminateVisibility(false);
+		}
+
+		@Override
+		public void failure(RetrofitError error) {
+			mTextView.append("\nError Message: " + error.getMessage());
+			setProgressBarIndeterminateVisibility(false);
+		}
+
+		protected abstract void onSuccess(T result);
+	}
+
+	private final HttpCallback<WdtIpResult> mGetIpCallback = new HttpCallback<WdtIpResult>() {
+		@Override
+		protected void onSuccess(WdtIpResult result) {
+			mIp = result.ip;
+			mTextView.append("IP: " + mIp);
+			mHostRestAdapter = new RestAdapter.Builder()
+					.setEndpoint("http://" + mIp)
+					.build();
+			mHostInterface = mHostRestAdapter.create(HostInterface.class);
+			RestAdapter testRestAdapter = new RestAdapter.Builder()
+					.setEndpoint("http://" + mIp)
+					.setConverter(new StringConverter())
+					.build();
+			mTestInterface = testRestAdapter.create(TestInterface.class);
+		}
+	};
+
+	private final HttpCallback<WdtLicenseResult> mGetLicenseCallback = new HttpCallback<WdtLicenseResult>() {
+		@Override
+		protected void onSuccess(WdtLicenseResult result) {
+			String licenseHex = result.pk;
+			try {
+				mLicense = Hex.decodeHex(licenseHex.toCharArray());
+				mTextView.append("\nLicense: " + licenseHex);
+			} catch (DecoderException e) {
+				Log.e(getClass().getSimpleName(), "Exception parsing license: " + e.getMessage(), e);
+				mTextView.append("\nException: " + e.getMessage());
+			}
+		}
+	};
+
+	private final HttpCallback<WdtLoginResult> mLoginCallback = new HttpCallback<WdtLoginResult>() {
+		@Override
+		protected void onSuccess(WdtLoginResult result) {
+			mSession = result.session;
+			mTextView.append("\nSession: " + mSession);
+		}
+	};
+
+	private final HttpCallback<WdtWarehouseResult> mGetWarehousesCallback = new HttpCallback<WdtWarehouseResult>() {
+		@Override
+		protected void onSuccess(WdtWarehouseResult result) {
+			mTextView.append("\nWarehouses: \n");
+			for (WdtWarehouse warehouse : result.warehouses) {
+				String json = new Gson().toJson(warehouse, WdtWarehouse.class);
+				mTextView.append(json + "\n");
+			}
+		}
+	};
+
+	private final HttpCallback<WdtStockResult> mGetStocksCallback = new HttpCallback<WdtStockResult>() {
+		@Override
+		protected void onSuccess(WdtStockResult result) {
+			mTextView.append("\nTest Stock: \n");
+			mTestStock = result.stocks.get(0);
+			mTextView.append("specNo: " + mTestStock.specNo + ", stockNum: " + mTestStock.stockNum);
+		}
+	};
+
+	private Callback<String> mTestCallBack = new Callback<String>() {
+		@Override
+		public void success(String s, retrofit.client.Response response) {
+			mTextView.append("\nTest: " + s);
+		}
+
+		@Override
+		public void failure(RetrofitError error) {
 			mTextView.append("\nError Message: " + error.getMessage());
 			setProgressBarIndeterminateVisibility(false);
 		}

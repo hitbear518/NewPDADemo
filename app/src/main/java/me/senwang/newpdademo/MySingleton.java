@@ -11,13 +11,6 @@ import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.ImageLoader;
 
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookieStore;
-import java.net.HttpCookie;
-import java.net.URI;
-import java.util.List;
-
 /**
  * Created by hitbe_000 on 1/22/2015.
  */
@@ -48,8 +41,8 @@ public class MySingleton {
 	public RequestQueue getRequestQueue() {
 		if (mRequestQueue == null) {
 			Cache cache = new DiskBasedCache(sContext.getCacheDir(), 1024 * 1024);
-			CookieManager cm = new CookieManager();
-			CookieHandler.setDefault(cm);
+//			CookieManager cm = new CookieManager();
+//			CookieHandler.setDefault(cm);
 			Network network = new BasicNetwork(new HurlStack());
 			mRequestQueue = new RequestQueue(cache, network);
 			mRequestQueue.start();
