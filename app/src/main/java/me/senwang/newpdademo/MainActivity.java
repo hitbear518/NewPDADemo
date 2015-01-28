@@ -109,6 +109,7 @@ public class MainActivity extends Activity {
 //				testParams.put("page_size", "1");
 				mHostInterface.getStocks(testParams, mGetStocksCallback);
 //				mTestInterface.testStocks(testParams, mTestCallBack);
+				
 			} else {
 				setProgressBarIndeterminateVisibility(false);
 			}
