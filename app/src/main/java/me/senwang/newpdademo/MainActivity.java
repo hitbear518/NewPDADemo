@@ -49,6 +49,7 @@ public class MainActivity extends Activity {
 	private TestInterface mTestInterface;
 
 	private WdtStock mTestStock;
+	private WdtFastPdResult mFastPdResult;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -109,7 +110,13 @@ public class MainActivity extends Activity {
 //				testParams.put("page_size", "1");
 				mHostInterface.getStocks(testParams, mGetStocksCallback);
 //				mTestInterface.testStocks(testParams, mTestCallBack);
-				
+			} else if (mFastPdResult == null) {
+				Map<String, String> testParams = new HashMap<>();
+				testParams.put("warehouse_no", "WH001");
+				testParams.put("spec_no", "penblack6");
+				testParams.put("old_stock", String.valueOf(mTestStock.stockNum));
+				testParams.put("new_stock", String.valueOf(mTestStock.stockNum + 1));
+				mHostInterface.fastPd(testParams, mFastPdCallback);
 			} else {
 				setProgressBarIndeterminateVisibility(false);
 			}
@@ -224,7 +231,7 @@ public class MainActivity extends Activity {
 				if (httpResult.code == 0) {
 					onSuccess(result);
 				} else {
-					mTextView.append("\nIllegal result, message: " + httpResult.message);
+					mTextView.append("\nIllegal result, code = " + httpResult.code + ", message: " + httpResult.message);
 				}
 			} else {
 				mTextView.append("\nIncorrect type, type: " + result.getClass().getSimpleName());
@@ -297,6 +304,15 @@ public class MainActivity extends Activity {
 			mTextView.append("\nTest Stock: \n");
 			mTestStock = result.stocks.get(0);
 			mTextView.append("specNo: " + mTestStock.specNo + ", warehouse_no: " + mTestStock.warehouseNo + ", stockNum: " + mTestStock.stockNum);
+			mFastPdResult = null;
+		}
+	};
+
+	private final HttpCallback<WdtFastPdResult> mFastPdCallback = new HttpCallback<WdtFastPdResult>() {
+		@Override
+		protected void onSuccess(WdtFastPdResult result) {
+			mTextView.append("\nPdNo: " + result.pdNo);
+			mTestStock = null;
 		}
 	};
 

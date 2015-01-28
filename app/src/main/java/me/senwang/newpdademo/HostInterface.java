@@ -24,4 +24,6 @@ public interface HostInterface {
 	@POST("/mobile/stock.php")
 	public void getStocks(@QueryMap Map<String, String> params, Callback<WdtStockResult> callback);
 
+	@POST("/mobile/stock_fast_pd.php")
+	public void fastPd(@QueryMap Map<String, String> params, Callback<WdtFastPdResult> callback);
 }
