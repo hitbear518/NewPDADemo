@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
 //				request(WdtRequestCopy.RequestUrl.getWarehousesUrl(mIp), WdtRequestCopy.Param.getWarehousesParams(), mWarehousesListener);
 //				mHostInterface.getWarehouses(mGetWarehousesCallback);
 				Map<String, String> testParams = new HashMap<>();
-//				testParams.put("warehouse_no", "WH1");
+				testParams.put("warehouse_no", "WH001");
 				testParams.put("spec_no", "penblack6");
 //				testParams.put("page_no", "1");
 //				testParams.put("page_size", "1");
