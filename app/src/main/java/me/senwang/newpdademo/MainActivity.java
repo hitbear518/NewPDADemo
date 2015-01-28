@@ -99,16 +99,18 @@ public class MainActivity extends Activity {
 //						mLoginListener);
 				mHostInterface.login(WdtRequestCopy.Param.getLoginParams(mSidEdit.getText().toString(), mUserNameEdit.getText().toString(), mLicense, pwdMd5Str),
 						mLoginCallback);
-			} else {
+			} else if (mTestStock == null) {
 //				request(WdtRequestCopy.RequestUrl.getWarehousesUrl(mIp), WdtRequestCopy.Param.getWarehousesParams(), mWarehousesListener);
 //				mHostInterface.getWarehouses(mGetWarehousesCallback);
 				Map<String, String> testParams = new HashMap<>();
 //				testParams.put("warehouse_no", "WH1");
-//				testParams.put("spec_no", "062650-01");
-				testParams.put("page_no", "1");
-				testParams.put("page_size", "1");
+				testParams.put("spec_no", "penblack6");
+//				testParams.put("page_no", "1");
+//				testParams.put("page_size", "1");
 				mHostInterface.getStocks(testParams, mGetStocksCallback);
 //				mTestInterface.testStocks(testParams, mTestCallBack);
+			} else {
+				setProgressBarIndeterminateVisibility(false);
 			}
 			return true;
 		case R.id.action_reset:
@@ -293,7 +295,7 @@ public class MainActivity extends Activity {
 		protected void onSuccess(WdtStockResult result) {
 			mTextView.append("\nTest Stock: \n");
 			mTestStock = result.stocks.get(0);
-			mTextView.append("specNo: " + mTestStock.specNo + ", stockNum: " + mTestStock.stockNum);
+			mTextView.append("specNo: " + mTestStock.specNo + ", warehouse_no: " + mTestStock.warehouseNo + ", stockNum: " + mTestStock.stockNum);
 		}
 	};
 
