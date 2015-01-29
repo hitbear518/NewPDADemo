@@ -9,5 +9,5 @@ import retrofit.http.Query;
  */
 public interface GetIpInterface {
 	@POST("/mobile/map.php?ua=mobile")
-	void getIp(@Query("sid") String sid, Callback<WdtIpResult> ipResultCallback);
+	void getIp(@Query("sid") String sid, Callback<IpResult> ipResultCallback);
 }

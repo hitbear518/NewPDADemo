@@ -48,14 +48,18 @@ public class MainActivity extends Activity {
 	private HostInterface mHostInterface;
 	private TestInterface mTestInterface;
 
-	private WdtStock mTestStock;
-	private WdtFastPdResult mFastPdResult;
+	private Stock mTestStock;
+	private FastPdResult mFastPdResult;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setContentView(R.layout.activity_main);
+
+		String test = "111";
+		boolean testb = test.equals(null);
+
 
 		mSidEdit = (EditText) findViewById(R.id.sid_edit);
 		mUserNameEdit = (EditText) findViewById(R.id.user_name_edit);
@@ -226,8 +230,8 @@ public class MainActivity extends Activity {
 	private abstract class HttpCallback<T> implements Callback<T> {
 		@Override
 		public void success(T result, retrofit.client.Response response) {
-			if (result instanceof WdtHttpResult) {
-				WdtHttpResult httpResult = (WdtHttpResult) result;
+			if (result instanceof HttpResult) {
+				HttpResult httpResult = (HttpResult) result;
 				if (httpResult.code == 0) {
 					onSuccess(result);
 				} else {
@@ -248,9 +252,9 @@ public class MainActivity extends Activity {
 		protected abstract void onSuccess(T result);
 	}
 
-	private final HttpCallback<WdtIpResult> mGetIpCallback = new HttpCallback<WdtIpResult>() {
+	private final HttpCallback<IpResult> mGetIpCallback = new HttpCallback<IpResult>() {
 		@Override
-		protected void onSuccess(WdtIpResult result) {
+		protected void onSuccess(IpResult result) {
 			mIp = result.ip;
 			mTextView.append("IP: " + mIp);
 			mHostRestAdapter = new RestAdapter.Builder()
@@ -265,9 +269,9 @@ public class MainActivity extends Activity {
 		}
 	};
 
-	private final HttpCallback<WdtLicenseResult> mGetLicenseCallback = new HttpCallback<WdtLicenseResult>() {
+	private final HttpCallback<LicenseResult> mGetLicenseCallback = new HttpCallback<LicenseResult>() {
 		@Override
-		protected void onSuccess(WdtLicenseResult result) {
+		protected void onSuccess(LicenseResult result) {
 			String licenseHex = result.pk;
 			try {
 				mLicense = Hex.decodeHex(licenseHex.toCharArray());
@@ -279,28 +283,28 @@ public class MainActivity extends Activity {
 		}
 	};
 
-	private final HttpCallback<WdtLoginResult> mLoginCallback = new HttpCallback<WdtLoginResult>() {
+	private final HttpCallback<LoginResult> mLoginCallback = new HttpCallback<LoginResult>() {
 		@Override
-		protected void onSuccess(WdtLoginResult result) {
+		protected void onSuccess(LoginResult result) {
 			mSession = result.session;
 			mTextView.append("\nSession: " + mSession);
 		}
 	};
 
-	private final HttpCallback<WdtWarehouseResult> mGetWarehousesCallback = new HttpCallback<WdtWarehouseResult>() {
+	private final HttpCallback<WarehouseResult> mGetWarehousesCallback = new HttpCallback<WarehouseResult>() {
 		@Override
-		protected void onSuccess(WdtWarehouseResult result) {
+		protected void onSuccess(WarehouseResult result) {
 			mTextView.append("\nWarehouses: \n");
-			for (WdtWarehouse warehouse : result.warehouses) {
-				String json = new Gson().toJson(warehouse, WdtWarehouse.class);
+			for (Warehouse warehouse : result.warehouses) {
+				String json = new Gson().toJson(warehouse, Warehouse.class);
 				mTextView.append(json + "\n");
 			}
 		}
 	};
 
-	private final HttpCallback<WdtStockResult> mGetStocksCallback = new HttpCallback<WdtStockResult>() {
+	private final HttpCallback<StockResult> mGetStocksCallback = new HttpCallback<StockResult>() {
 		@Override
-		protected void onSuccess(WdtStockResult result) {
+		protected void onSuccess(StockResult result) {
 			mTextView.append("\nTest Stock: \n");
 			mTestStock = result.stocks.get(0);
 			mTextView.append("specNo: " + mTestStock.specNo + ", warehouse_no: " + mTestStock.warehouseNo + ", stockNum: " + mTestStock.stockNum);
@@ -308,9 +312,9 @@ public class MainActivity extends Activity {
 		}
 	};
 
-	private final HttpCallback<WdtFastPdResult> mFastPdCallback = new HttpCallback<WdtFastPdResult>() {
+	private final HttpCallback<FastPdResult> mFastPdCallback = new HttpCallback<FastPdResult>() {
 		@Override
-		protected void onSuccess(WdtFastPdResult result) {
+		protected void onSuccess(FastPdResult result) {
 			mTextView.append("\nPdNo: " + result.pdNo);
 			mTestStock = null;
 		}

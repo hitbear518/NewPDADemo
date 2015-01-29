@@ -5,6 +5,6 @@ package me.senwang.newpdademo;
  * Last modified:
  * By:
  */
-public class WdtLoginResult extends WdtHttpResult{
-	public String session;
+public class LicenseResult extends HttpResult {
+	public String pk;
 }

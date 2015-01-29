@@ -13,17 +13,17 @@ import retrofit.http.QueryMap;
  */
 public interface HostInterface {
 	@POST("/mobile/prepare.php")
-	void getLicense(Callback<WdtLicenseResult> callback);
+	void getLicense(Callback<LicenseResult> callback);
 
 	@POST("/mobile/login.php")
-	void login(@QueryMap Map<String, String> params, Callback<WdtLoginResult> callback);
+	void login(@QueryMap Map<String, String> params, Callback<LoginResult> callback);
 
 	@POST("/mobile/warehouse.php?mine=1")
-	void getWarehouses(Callback<WdtWarehouseResult> callback);
+	void getWarehouses(Callback<WarehouseResult> callback);
 
 	@POST("/mobile/stock.php")
-	public void getStocks(@QueryMap Map<String, String> params, Callback<WdtStockResult> callback);
+	public void getStocks(@QueryMap Map<String, String> params, Callback<StockResult> callback);
 
 	@POST("/mobile/stock_fast_pd.php")
-	public void fastPd(@QueryMap Map<String, String> params, Callback<WdtFastPdResult> callback);
+	public void fastPd(@QueryMap Map<String, String> params, Callback<FastPdResult> callback);
 }

@@ -7,6 +7,6 @@ import java.util.List;
  * Last modified:
  * By:
  */
-public class WdtWarehouseResult extends WdtHttpResult{
-	List<WdtWarehouse> warehouses;
+public class WarehouseResult extends HttpResult {
+	List<Warehouse> warehouses;
 }

@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
  * Last modified:
  * By:
  */
-public class WdtWarehouse {
+public class Warehouse {
 	@SerializedName("warehouse_type") public int warehouseType;
 	@SerializedName("warehouse_no") public String warehouseNo;
 	public String name;

@@ -7,6 +7,6 @@ import com.google.gson.annotations.SerializedName;
  * Last modified:
  * By:
  */
-public class WdtFastPdResult extends WdtHttpResult {
+public class FastPdResult extends HttpResult {
 	@SerializedName("pd_no") public String pdNo;
 }

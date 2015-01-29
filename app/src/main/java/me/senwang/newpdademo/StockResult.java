@@ -7,6 +7,6 @@ import java.util.List;
  * Last modified:
  * By:
  */
-public class WdtStockResult extends WdtHttpResult{
-	public List<WdtStock> stocks;
+public class StockResult extends HttpResult {
+	public List<Stock> stocks;
 }

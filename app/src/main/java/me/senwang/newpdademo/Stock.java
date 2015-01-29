@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
  * Last modified:
  * By:
  */
-public class WdtStock {
+public class Stock {
 	@SerializedName("warehouse_no")
 	public String warehouseNo; //仓库编码
 	@SerializedName("warehouse_name")
